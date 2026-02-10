@@ -7,14 +7,26 @@
  * 2. After user selects a domain, exposes domain-specific tools
  * 3. Lazy-loads domain handlers and the NinjaOne client
  *
+ * Supports both stdio and HTTP transports:
+ * - stdio (default): For local Claude Desktop / CLI usage
+ * - http: For hosted deployment with optional gateway auth
+ *
  * Credentials are provided via environment variables:
  * - NINJAONE_CLIENT_ID
  * - NINJAONE_CLIENT_SECRET
  * - NINJAONE_REGION (us, eu, oc)
+ *
+ * Or via gateway headers (when AUTH_MODE=gateway):
+ * - X-Ninja-Client-ID
+ * - X-Ninja-Client-Secret
+ * - X-Ninja-Region
  */
 
+import { createServer, IncomingMessage, ServerResponse } from "node:http";
+import { randomUUID } from "node:crypto";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -233,11 +245,123 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// Start the server
-async function main() {
+/**
+ * Start the server with stdio transport (default)
+ */
+async function startStdioTransport(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("NinjaOne MCP server running on stdio (decision tree mode)");
+}
+
+/**
+ * Start the server with HTTP Streamable transport
+ * Supports gateway mode where credentials come from request headers
+ */
+async function startHttpTransport(): Promise<void> {
+  const port = parseInt(process.env.MCP_HTTP_PORT || "8080", 10);
+  const host = process.env.MCP_HTTP_HOST || "0.0.0.0";
+  const isGatewayMode = process.env.AUTH_MODE === "gateway";
+
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: () => randomUUID(),
+    enableJsonResponse: true,
+  });
+
+  const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
+    const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+
+    // Health endpoint - no auth required
+    if (url.pathname === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          status: "ok",
+          transport: "http",
+          authMode: isGatewayMode ? "gateway" : "env",
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
+
+    // MCP endpoint
+    if (url.pathname === "/mcp") {
+      // In gateway mode, extract credentials from headers
+      if (isGatewayMode) {
+        const clientId = req.headers["x-ninja-client-id"] as string | undefined;
+        const clientSecret = req.headers["x-ninja-client-secret"] as string | undefined;
+        const region = req.headers["x-ninja-region"] as string | undefined;
+
+        if (!clientId || !clientSecret) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              error: "Missing credentials",
+              message:
+                "Gateway mode requires X-Ninja-Client-ID and X-Ninja-Client-Secret headers",
+              required: ["X-Ninja-Client-ID", "X-Ninja-Client-Secret"],
+              optional: ["X-Ninja-Region"],
+            })
+          );
+          return;
+        }
+
+        // Set environment variables for this request so getCredentials() picks them up
+        process.env.NINJAONE_CLIENT_ID = clientId;
+        process.env.NINJAONE_CLIENT_SECRET = clientSecret;
+        if (region) {
+          process.env.NINJAONE_REGION = region;
+        }
+      }
+
+      transport.handleRequest(req, res);
+      return;
+    }
+
+    // 404 for everything else
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Not found", endpoints: ["/mcp", "/health"] }));
+  });
+
+  await server.connect(transport);
+
+  await new Promise<void>((resolve) => {
+    httpServer.listen(port, host, () => {
+      console.error(`NinjaOne MCP server listening on http://${host}:${port}/mcp`);
+      console.error(`Health check available at http://${host}:${port}/health`);
+      console.error(
+        `Authentication mode: ${isGatewayMode ? "gateway (header-based)" : "env (environment variables)"}`
+      );
+      resolve();
+    });
+  });
+
+  // Graceful shutdown
+  const shutdown = async () => {
+    console.error("Shutting down NinjaOne MCP server...");
+    await new Promise<void>((resolve, reject) => {
+      httpServer.close((err) => (err ? reject(err) : resolve()));
+    });
+    await server.close();
+    process.exit(0);
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
+
+/**
+ * Main entry point - select transport based on MCP_TRANSPORT env var
+ */
+async function main() {
+  const transportType = process.env.MCP_TRANSPORT || "stdio";
+
+  if (transportType === "http") {
+    await startHttpTransport();
+  } else {
+    await startStdioTransport();
+  }
 }
 
 main().catch(console.error);

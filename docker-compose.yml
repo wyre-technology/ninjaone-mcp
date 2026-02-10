@@ -1,0 +1,91 @@
+
+
+services:
+  ninjaone-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: ninjaone-mcp:latest
+    container_name: ninjaone-mcp-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Required NinjaOne credentials (set these in .env file)
+      - NINJAONE_CLIENT_ID=${NINJAONE_CLIENT_ID}
+      - NINJAONE_CLIENT_SECRET=${NINJAONE_CLIENT_SECRET}
+
+      # Optional configuration
+      - NINJAONE_REGION=${NINJAONE_REGION:-us}
+      - MCP_SERVER_NAME=${MCP_SERVER_NAME:-ninjaone-mcp}
+
+      # Logging configuration
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NODE_ENV=production
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount logs directory for persistence
+      - ninjaone-mcp-logs:/app/logs
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Resource limits for production use
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # Development service - runs once for testing, doesn't restart
+  ninjaone-mcp-dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    image: ninjaone-mcp:dev
+    container_name: ninjaone-mcp-dev
+    working_dir: /app
+    restart: "no"
+    command: npm run dev
+    environment:
+      # Development environment variables
+      - NODE_ENV=development
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+
+      # NinjaOne credentials
+      - NINJAONE_CLIENT_ID=${NINJAONE_CLIENT_ID}
+      - NINJAONE_CLIENT_SECRET=${NINJAONE_CLIENT_SECRET}
+      - NINJAONE_REGION=${NINJAONE_REGION:-us}
+    env_file:
+      - .env
+    volumes:
+      # Mount source code for hot reload in development
+      - .:/app
+      - /app/node_modules
+      - ninjaone-mcp-dev-logs:/app/logs
+    stdin_open: true
+    tty: true
+
+volumes:
+  ninjaone-mcp-logs:
+    driver: local
+  ninjaone-mcp-dev-logs:
+    driver: local
+
+# Example .env file structure (create this file with your actual credentials):
+# NINJAONE_CLIENT_ID=your-client-id
+# NINJAONE_CLIENT_SECRET=your-client-secret
+# NINJAONE_REGION=us
+# LOG_LEVEL=info
