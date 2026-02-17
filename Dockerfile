@@ -1,11 +1,7 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
-COPY package*.json .npmrc ./
-ARG GITHUB_TOKEN
-RUN echo "@asachs01:registry=https://npm.pkg.github.com" > .npmrc && \
-    echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> .npmrc && \
-    npm ci && \
-    rm -f .npmrc
+COPY package*.json ./
+RUN npm ci
 COPY . .
 RUN npm run build
 
