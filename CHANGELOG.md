@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.0.1...v1.0.2) (2026-02-17)
+
+
+### Bug Fixes
+
+* **docker:** drop arm64 platform to fix QEMU build failures ([e64acd8](https://github.com/wyre-technology/ninjaone-mcp/commit/e64acd8e977c164d440d931d51923b821e37fe04))
+
 ## [1.0.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.0.0...v1.0.1) (2026-02-17)
 
 
