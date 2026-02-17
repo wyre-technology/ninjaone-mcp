@@ -1,33 +1,29 @@
 {
   "manifest_version": "0.3",
   "name": "ninjaone-mcp",
-  "version": "0.0.1",
   "display_name": "NinjaOne MCP Server",
-  "description": "NinjaOne MCP server with decision tree architecture for Claude",
-  "author": { "name": "Aaron Sachs", "url": "https://github.com/asachs01" },
+  "version": "0.0.0",
+  "description": "MCP server for NinjaOne RMM - access devices, organizations, tickets, and alerts through AI assistants",
+  "long_description": "Provides AI assistants with structured access to your NinjaOne RMM data. Manage devices, organizations, tickets, alerts, and software inventory through the Model Context Protocol.",
+  "author": { "name": "Wyre Technology", "url": "https://github.com/wyre-technology" },
   "repository": { "type": "git", "url": "https://github.com/wyre-technology/ninjaone-mcp" },
   "homepage": "https://github.com/wyre-technology/ninjaone-mcp",
-  "license": "MIT",
-  "keywords": ["ninjaone", "rmm", "monitoring", "msp", "it-management"],
+  "license": "Apache-2.0",
+  "keywords": ["ninjaone", "rmm", "msp", "devices", "it-management"],
   "server": {
     "type": "node",
     "entry_point": "dist/index.js",
     "mcp_config": {
       "command": "node",
       "args": ["${__dirname}/dist/index.js"],
-      "env": {
-        "NINJAONE_CLIENT_ID": "${user_config.ninjaone_client_id}",
-        "NINJAONE_CLIENT_SECRET": "${user_config.ninjaone_client_secret}",
-        "NINJAONE_REGION": "${user_config.ninjaone_region}",
-        "MCP_TRANSPORT": "stdio"
-      }
+      "env": { "NINJAONE_CLIENT_ID": "${user_config.ninjaone_client_id}", "NINJAONE_CLIENT_SECRET": "${user_config.ninjaone_client_secret}", "NINJAONE_REGION": "${user_config.ninjaone_region}", "MCP_TRANSPORT": "stdio" }
     }
   },
   "tools_generated": true,
   "user_config": {
-    "ninjaone_client_id": { "type": "string", "title": "NinjaOne Client ID", "description": "Your NinjaOne client ID", "required": true },
-    "ninjaone_client_secret": { "type": "string", "title": "NinjaOne Client Secret", "description": "Your NinjaOne client secret", "required": true, "sensitive": true },
-    "ninjaone_region": { "type": "string", "title": "NinjaOne Region", "description": "NinjaOne region (default: us)", "required": false }
+    "ninjaone_client_id": { "type": "string", "title": "NinjaOne Client ID", "description": "Your NinjaOne OAuth client ID", "sensitive": true, "required": true },
+    "ninjaone_client_secret": { "type": "string", "title": "NinjaOne Client Secret", "description": "Your NinjaOne OAuth client secret", "sensitive": true, "required": true },
+    "ninjaone_region": { "type": "string", "title": "NinjaOne Region", "description": "Region: us, eu, or oc (default: us)", "sensitive": false, "required": false }
   },
   "compatibility": { "platforms": ["darwin", "win32", "linux"], "runtimes": { "node": ">=18.0.0" }, "claude_desktop": ">=0.10.0" }
 }
