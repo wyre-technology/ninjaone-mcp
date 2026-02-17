@@ -1,3 +1,33 @@
+# 1.0.0 (2026-02-17)
+
+
+### Bug Fixes
+
+* **ci:** add GITHUB_TOKEN build-arg for npm auth during Docker build ([1ddf2fb](https://github.com/wyre-technology/ninjaone-mcp/commit/1ddf2fbbc0b9eec7601a28ea7c3e24fa5abe4515))
+* **ci:** add npm auth for GitHub Packages, use Node 20/22, fix duplicate step IDs ([1d6252d](https://github.com/wyre-technology/ninjaone-mcp/commit/1d6252d9bd72425e4641d4b9c42e469818eb8a4e))
+* **ci:** update .npmrc package scope to [@wyre-technology](https://github.com/wyre-technology) ([95dfc79](https://github.com/wyre-technology/ninjaone-mcp/commit/95dfc79c0c390fe279698b22317c2f65d45e4b35))
+* **ci:** update peerDependencies scope from [@asachs01](https://github.com/asachs01) to [@wyre-technology](https://github.com/wyre-technology) ([c1b96b7](https://github.com/wyre-technology/ninjaone-mcp/commit/c1b96b71e312c514d0ccd5185ec45c4308cc542c))
+* **deps:** add semantic-release plugins as devDependencies ([61ad598](https://github.com/wyre-technology/ninjaone-mcp/commit/61ad5980c629d3208a361603eb7881660a27623e))
+* **docker:** simplify Dockerfile — no private deps needed ([0293033](https://github.com/wyre-technology/ninjaone-mcp/commit/0293033ccf0fea6faf002604e00d252ee7a04681))
+* escape newlines in .releaserc.json message template ([46f26d0](https://github.com/wyre-technology/ninjaone-mcp/commit/46f26d060326779b05a11c69be719e3f9464c623))
+* regenerate package-lock.json with semantic-release deps ([782d199](https://github.com/wyre-technology/ninjaone-mcp/commit/782d199b52633eb518668eadfdbf97f01d083a29))
+* remove .npmrc — no private dependencies ([da1c5b9](https://github.com/wyre-technology/ninjaone-mcp/commit/da1c5b9b670c95e0c5abf1fbe1b1ab83d03514d7))
+* remove unnecessary GitHub Packages auth from CI (no private deps) ([718ef9b](https://github.com/wyre-technology/ninjaone-mcp/commit/718ef9bd4cced5422452c523e45f8246dd95d5d0))
+* remove unnecessary GITHUB_TOKEN auth from Dockerfile (no private deps) ([8ce6d63](https://github.com/wyre-technology/ninjaone-mcp/commit/8ce6d63e0621c6295e8901da57addd3179db4023))
+* remove unused peerDependency on node-ninjaone (client code is inline) ([d8ef67a](https://github.com/wyre-technology/ninjaone-mcp/commit/d8ef67a076e8d18405b4267d01760268d6a0c21d))
+
+
+### Features
+
+* Add HTTP transport, Docker containers, and deployment configs ([14c28d3](https://github.com/wyre-technology/ninjaone-mcp/commit/14c28d35a5b3488d79b05bd0b4eb87a3f8ef1ffc))
+* add mcpb packaging support ([22e68d5](https://github.com/wyre-technology/ninjaone-mcp/commit/22e68d5abed1a0c8431c779d747369f50df0fc51))
+* add mcpb packaging support ([71c1d86](https://github.com/wyre-technology/ninjaone-mcp/commit/71c1d8682a4dac1dcfe40207e0ff17d39c90e067))
+* add mcpb packaging support ([1c2b798](https://github.com/wyre-technology/ninjaone-mcp/commit/1c2b798d6bcc1b09f4459ead2f568bf7184ef440))
+* add mcpb packaging support ([9d60a8d](https://github.com/wyre-technology/ninjaone-mcp/commit/9d60a8dcc9e9aac11cf8fbcffde4fa901de96387))
+* add mcpb packaging support ([5036bef](https://github.com/wyre-technology/ninjaone-mcp/commit/5036bef22f75fc32a0a2110e4bdaed9062648d6f))
+* add one-click deploy badges to README ([d1d6979](https://github.com/wyre-technology/ninjaone-mcp/commit/d1d6979adb702393c60990dc713dd55f3ff0908b))
+* Initial release of NinjaOne MCP server ([2b1b9d4](https://github.com/wyre-technology/ninjaone-mcp/commit/2b1b9d4d2aff362b6ffca5f37e59cbee29868223))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
