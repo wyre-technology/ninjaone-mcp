@@ -58,6 +58,30 @@ jobs:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
+      - name: Get released version
+        id: version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require("./package.json").version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if gh release view "v$VERSION" --repo ${{ github.repository }} &>/dev/null; then
+            echo "released=true" >> $GITHUB_OUTPUT
+          else
+            echo "released=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pack and upload MCPB bundle
+        if: steps.version.outputs.released == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUNDLE_NAME=$(node -p "require('./package.json').name.replace(/^@.*\//, '')")
+          npm install -g @anthropic-ai/mcpb
+          npm run pack:mcpb
+          gh release upload "v${{ steps.version.outputs.version }}" ${BUNDLE_NAME}.mcpb \
+            --repo ${{ github.repository }} --clobber
+
   docker:
     name: Docker
     runs-on: ubuntu-latest
