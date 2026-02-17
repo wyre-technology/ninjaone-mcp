@@ -45,10 +45,10 @@
     "@modelcontextprotocol/sdk": "^1.25.3"
   },
   "peerDependencies": {
-    "@asachs01/node-ninjaone": "^1.0.0"
+    "@wyre-technology/node-ninjaone": "^1.0.0"
   },
   "peerDependenciesMeta": {
-    "@asachs01/node-ninjaone": {
+    "@wyre-technology/node-ninjaone": {
       "optional": false
     }
   },
