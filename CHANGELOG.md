@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.0.0...v1.0.1) (2026-02-17)
+
+
+### Bug Fixes
+
+* update all references from [@asachs01](https://github.com/asachs01) to [@wyre-technology](https://github.com/wyre-technology) scope ([a89a28f](https://github.com/wyre-technology/ninjaone-mcp/commit/a89a28f23c2d6cf1ab2955dfaa6da1d51e379022))
+
 # 1.0.0 (2026-02-17)
 
 
