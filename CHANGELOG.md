@@ -1,3 +1,12 @@
+# [1.1.0](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.0.2...v1.1.0) (2026-02-17)
+
+
+### Features
+
+* add MCPB bundle to release workflow ([d04a667](https://github.com/wyre-technology/ninjaone-mcp/commit/d04a667c8bf1cb0b4a651f2d33294ba6ac1ae9c2))
+* add MCPB manifest for desktop installation ([15d1152](https://github.com/wyre-technology/ninjaone-mcp/commit/15d115252c3b2d2a60a50227b1b1ac72504b829e))
+* add MCPB pack script ([6a4573f](https://github.com/wyre-technology/ninjaone-mcp/commit/6a4573fa7a9e212d3dc2b93b1b831f3fff486d37))
+
 ## [1.0.2](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.0.1...v1.0.2) (2026-02-17)
 
 
