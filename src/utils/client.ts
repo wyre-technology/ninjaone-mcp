@@ -5,7 +5,7 @@
  * to avoid loading the entire library upfront.
  */
 
-import type { NinjaOneClient } from "@asachs01/node-ninjaone";
+import type { NinjaOneClient } from "@wyre-technology/node-ninjaone";
 import { isValidRegion, getBaseUrlForRegion, type NinjaOneRegion } from "./types.js";
 
 export interface NinjaOneCredentials {
@@ -65,7 +65,7 @@ export async function getClient(): Promise<NinjaOneClient> {
 
   if (!_client) {
     // Lazy import the library
-    const { NinjaOneClient } = await import("@asachs01/node-ninjaone");
+    const { NinjaOneClient } = await import("@wyre-technology/node-ninjaone");
     _client = new NinjaOneClient({
       clientId: creds.clientId,
       clientSecret: creds.clientSecret,

@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { getCredentials, getClient, clearClient } from "../utils/client.js";
 
 // Mock the node-ninjaone library
-vi.mock("@asachs01/node-ninjaone", () => ({
+vi.mock("@wyre-technology/node-ninjaone", () => ({
   NinjaOneClient: vi.fn().mockImplementation((config) => ({
     config,
     devices: {

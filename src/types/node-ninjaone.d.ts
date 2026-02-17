@@ -1,11 +1,11 @@
 /**
- * Type declarations for @asachs01/node-ninjaone
+ * Type declarations for @wyre-technology/node-ninjaone
  *
  * These types define the expected interface for the NinjaOne client library.
- * The actual implementation will be provided by the @asachs01/node-ninjaone package.
+ * The actual implementation will be provided by the @wyre-technology/node-ninjaone package.
  */
 
-declare module "@asachs01/node-ninjaone" {
+declare module "@wyre-technology/node-ninjaone" {
   export interface NinjaOneClientConfig {
     clientId: string;
     clientSecret: string;
