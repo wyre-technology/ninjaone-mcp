@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.1.0...v1.1.1) (2026-02-18)
+
+
+### Bug Fixes
+
+* **ci:** fix release workflow failures ([5d315f5](https://github.com/wyre-technology/ninjaone-mcp/commit/5d315f58e2fca5859274391266eead4163b57111))
+
 # [1.1.0](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.0.2...v1.1.0) (2026-02-17)
 
 
