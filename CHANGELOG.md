@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.1.1...v1.1.2) (2026-02-18)
+
+
+### Bug Fixes
+
+* convert pack-mcpb.js to ESM imports ([8fad901](https://github.com/wyre-technology/ninjaone-mcp/commit/8fad9016da2018a4710f0d4e930446230eaeb3b7))
+
 ## [1.1.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.1.0...v1.1.1) (2026-02-18)
 
 
