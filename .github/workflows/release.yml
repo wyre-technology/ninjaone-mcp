@@ -63,7 +63,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=$(node -p "require("./package.json").version")
+          VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           if gh release view "v$VERSION" --repo ${{ github.repository }} &>/dev/null; then
             echo "released=true" >> $GITHUB_OUTPUT
