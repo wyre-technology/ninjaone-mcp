@@ -6,9 +6,15 @@
  * then runs mcpb pack to create the bundle.
  */
 
-const { execSync } = require('child_process');
-const { cpSync, mkdirSync, rmSync, existsSync, copyFileSync } = require('fs');
-const { resolve, join } = require('path');
+import { execSync } from 'child_process';
+import { cpSync, mkdirSync, rmSync, existsSync, copyFileSync, readFileSync, writeFileSync, statSync } from 'fs';
+import { resolve, join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const require = createRequire(import.meta.url);
 
 const ROOT = resolve(__dirname, '..');
 const STAGING = resolve(ROOT, '.mcpb-staging');
@@ -30,11 +36,11 @@ try {
 
   // 3. Copy production files (sync manifest version from package.json)
   console.log('\n=== Copying production files ===');
-  const pkg = require(join(ROOT, 'package.json'));
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
   cpSync(join(ROOT, 'dist'), join(STAGING, 'dist'), { recursive: true });
-  const manifest = JSON.parse(require('fs').readFileSync(join(ROOT, 'manifest.json'), 'utf8'));
+  const manifest = JSON.parse(readFileSync(join(ROOT, 'manifest.json'), 'utf8'));
   manifest.version = pkg.version;
-  require('fs').writeFileSync(
+  writeFileSync(
     join(STAGING, 'manifest.json'),
     JSON.stringify(manifest, null, 2) + '\n'
   );
@@ -51,7 +57,7 @@ try {
     main: pkg.main,
     dependencies: pkg.dependencies,
   };
-  require('fs').writeFileSync(
+  writeFileSync(
     join(STAGING, 'package.json'),
     JSON.stringify(prodPkg, null, 2)
   );
@@ -93,7 +99,7 @@ try {
 
   console.log('\n=== Done! ===');
   if (existsSync(bundlePath)) {
-    const stats = require('fs').statSync(bundlePath);
+    const stats = statSync(bundlePath);
     console.log(`Bundle: ${pkg.name}.mcpb (${(stats.size / 1024 / 1024).toFixed(1)}MB)`);
   }
 } catch (error) {
