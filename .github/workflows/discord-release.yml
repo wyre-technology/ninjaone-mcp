@@ -1,0 +1,19 @@
+name: Discord Release Notification
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          nodetail: true
+          title: "🚀 New Release: ${{ github.event.release.tag_name }}"
+          description: |
+            **${{ github.repository }}** — [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }})
+
+            ${{ github.event.release.body }}
+          color: 0x57F287
