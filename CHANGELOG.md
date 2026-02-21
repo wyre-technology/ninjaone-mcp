@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.2.1...v1.2.2) (2026-02-21)
+
+
+### Bug Fixes
+
+* update node-ninjaone to v1.0.1 ([b1437d9](https://github.com/wyre-technology/ninjaone-mcp/commit/b1437d9b69dbd3d215c0b8621b1f3878738bed30))
+
 ## [1.2.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.2.0...v1.2.1) (2026-02-21)
 
 
