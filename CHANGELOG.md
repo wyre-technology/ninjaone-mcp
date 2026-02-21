@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.1.3...v1.2.0) (2026-02-21)
+
+
+### Features
+
+* add comprehensive logging and fix empty response bug ([c97d547](https://github.com/wyre-technology/ninjaone-mcp/commit/c97d547d18f804b668c4f68967e5c881143b5452)), closes [#22](https://github.com/wyre-technology/ninjaone-mcp/issues/22)
+
 ## [1.1.3](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.1.2...v1.1.3) (2026-02-18)
 
 
