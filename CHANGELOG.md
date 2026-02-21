@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.2.0...v1.2.1) (2026-02-21)
+
+
+### Bug Fixes
+
+* handle raw array responses from NinjaOne API ([bdd9a4a](https://github.com/wyre-technology/ninjaone-mcp/commit/bdd9a4abacd1931215353eb7737a0500585fed5e))
+
 # [1.2.0](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.1.3...v1.2.0) (2026-02-21)
 
 
