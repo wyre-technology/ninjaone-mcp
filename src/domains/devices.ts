@@ -170,16 +170,11 @@ async function handleCall(
       });
       logger.debug("API response: devices.list", { response });
 
-      if (!response || typeof response !== "object" || !("devices" in response)) {
-        logger.warn("Unexpected response shape from devices.list", {
-          responseType: typeof response,
-          keys: response ? Object.keys(response) : [],
-          raw: JSON.stringify(response)?.substring(0, 500),
-        });
-      }
-
-      const devices = response?.devices ?? [];
-      const nextCursor = response?.cursor;
+      // The API may return a raw array or a wrapped {devices, cursor} object
+      const devices = Array.isArray(response)
+        ? response
+        : (response?.devices ?? []);
+      const nextCursor = Array.isArray(response) ? undefined : response?.cursor;
 
       return {
         content: [

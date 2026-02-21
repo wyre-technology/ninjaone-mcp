@@ -137,16 +137,11 @@ async function handleCall(
       });
       logger.debug("API response: alerts.list", { response });
 
-      if (!response || typeof response !== "object" || !("alerts" in response)) {
-        logger.warn("Unexpected response shape from alerts.list", {
-          responseType: typeof response,
-          keys: response ? Object.keys(response) : [],
-          raw: JSON.stringify(response)?.substring(0, 500),
-        });
-      }
-
-      const alerts = response?.alerts ?? [];
-      const nextCursor = response?.cursor;
+      // The API may return a raw array or a wrapped {alerts, cursor} object
+      const alerts = Array.isArray(response)
+        ? response
+        : (response?.alerts ?? []);
+      const nextCursor = Array.isArray(response) ? undefined : response?.cursor;
 
       return {
         content: [

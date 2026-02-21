@@ -210,16 +210,11 @@ async function handleCall(
       });
       logger.debug("API response: tickets.list", { response });
 
-      if (!response || typeof response !== "object" || !("tickets" in response)) {
-        logger.warn("Unexpected response shape from tickets.list", {
-          responseType: typeof response,
-          keys: response ? Object.keys(response) : [],
-          raw: JSON.stringify(response)?.substring(0, 500),
-        });
-      }
-
-      const tickets = response?.tickets ?? [];
-      const nextCursor = response?.cursor;
+      // The API may return a raw array or a wrapped {tickets, cursor} object
+      const tickets = Array.isArray(response)
+        ? response
+        : (response?.tickets ?? []);
+      const nextCursor = Array.isArray(response) ? undefined : response?.cursor;
 
       return {
         content: [
