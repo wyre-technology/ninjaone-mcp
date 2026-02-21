@@ -82,6 +82,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Structured logger utility (`src/utils/logger.ts`) with `LOG_LEVEL` env var support (`debug` | `info` | `warn` | `error`)
+- API call/response logging in all domain handlers (organizations, devices, alerts, tickets)
+- Response shape validation with warnings when API returns unexpected structure
+- Tool call logging in `index.ts` (incoming requests, completion, errors with stack traces)
+- Credential diagnostic logging in `client.ts` (warns on missing creds or invalid region)
+- Enhanced `/health` endpoint with credential status, log level, and version info (returns 503 when credentials are missing)
+- Startup logging with transport type, log level, and Node.js version
 - Initial release of NinjaOne MCP server
 - Decision tree architecture with lazy loading
 - Devices domain (list, get, reboot, services, alerts, activities)
@@ -97,3 +104,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cloudflare Workers entry point (`src/worker.ts`) and `wrangler.json`
 - DigitalOcean App Platform deployment config (`.do/app.yaml`)
 - HTTP transport test suite (15 tests for health, 404, env mode, gateway auth)
+
+### Fixed
+- Empty `{}` responses from list endpoints when API returns unexpected response shape (now falls back to empty arrays via nullish coalescing)

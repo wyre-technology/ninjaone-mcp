@@ -7,6 +7,7 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { DomainHandler, CallToolResult } from "../utils/types.js";
 import { getClient } from "../utils/client.js";
+import { logger } from "../utils/logger.js";
 
 /**
  * Get ticket domain tools
@@ -189,27 +190,42 @@ async function handleCall(
   switch (toolName) {
     case "ninjaone_tickets_list": {
       const limit = (args.limit as number) || 50;
+      const cursor = args.cursor as string | undefined;
+      logger.info("API call: tickets.list", {
+        status: args.status,
+        organizationId: args.organization_id,
+        deviceId: args.device_id,
+        boardId: args.board_id,
+        limit,
+        cursor,
+      });
+
       const response = await client.tickets.list({
         status: args.status as string | undefined,
         organizationId: args.organization_id as number | undefined,
         deviceId: args.device_id as number | undefined,
         boardId: args.board_id as number | undefined,
         pageSize: limit,
-        cursor: args.cursor as string | undefined,
+        cursor,
       });
+      logger.debug("API response: tickets.list", { response });
+
+      if (!response || typeof response !== "object" || !("tickets" in response)) {
+        logger.warn("Unexpected response shape from tickets.list", {
+          responseType: typeof response,
+          keys: response ? Object.keys(response) : [],
+          raw: JSON.stringify(response)?.substring(0, 500),
+        });
+      }
+
+      const tickets = response?.tickets ?? [];
+      const nextCursor = response?.cursor;
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(
-              {
-                tickets: response.tickets,
-                cursor: response.cursor,
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify({ tickets, cursor: nextCursor }, null, 2),
           },
         ],
       };
@@ -217,7 +233,9 @@ async function handleCall(
 
     case "ninjaone_tickets_get": {
       const ticketId = args.ticket_id as number;
+      logger.info("API call: tickets.get", { ticketId });
       const ticket = await client.tickets.get(ticketId);
+      logger.debug("API response: tickets.get", { ticket });
 
       return {
         content: [{ type: "text", text: JSON.stringify(ticket, null, 2) }],
@@ -225,6 +243,7 @@ async function handleCall(
     }
 
     case "ninjaone_tickets_create": {
+      logger.info("API call: tickets.create", { subject: args.subject, organizationId: args.organization_id });
       const ticket = await client.tickets.create({
         subject: args.subject as string,
         description: args.description as string | undefined,
@@ -234,6 +253,7 @@ async function handleCall(
         priority: args.priority as string | undefined,
         type: args.type as string | undefined,
       });
+      logger.debug("API response: tickets.create", { ticket });
 
       return {
         content: [{ type: "text", text: JSON.stringify(ticket, null, 2) }],
@@ -242,6 +262,7 @@ async function handleCall(
 
     case "ninjaone_tickets_update": {
       const ticketId = args.ticket_id as number;
+      logger.info("API call: tickets.update", { ticketId });
       const ticket = await client.tickets.update(ticketId, {
         subject: args.subject as string | undefined,
         description: args.description as string | undefined,
@@ -249,6 +270,7 @@ async function handleCall(
         priority: args.priority as string | undefined,
         assigneeId: args.assignee_id as number | undefined,
       });
+      logger.debug("API response: tickets.update", { ticket });
 
       return {
         content: [{ type: "text", text: JSON.stringify(ticket, null, 2) }],
@@ -257,10 +279,12 @@ async function handleCall(
 
     case "ninjaone_tickets_add_comment": {
       const ticketId = args.ticket_id as number;
+      logger.info("API call: tickets.addComment", { ticketId });
       const comment = await client.tickets.addComment(ticketId, {
         body: args.body as string,
         public: (args.public as boolean) ?? true,
       });
+      logger.debug("API response: tickets.addComment", { comment });
 
       return {
         content: [{ type: "text", text: JSON.stringify(comment, null, 2) }],
@@ -269,7 +293,9 @@ async function handleCall(
 
     case "ninjaone_tickets_comments": {
       const ticketId = args.ticket_id as number;
+      logger.info("API call: tickets.getComments", { ticketId });
       const comments = await client.tickets.getComments(ticketId);
+      logger.debug("API response: tickets.getComments", { comments });
 
       return {
         content: [{ type: "text", text: JSON.stringify(comments, null, 2) }],

@@ -7,6 +7,7 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { DomainHandler, CallToolResult } from "../utils/types.js";
 import { getClient } from "../utils/client.js";
+import { logger } from "../utils/logger.js";
 
 /**
  * Get alert domain tools
@@ -116,27 +117,42 @@ async function handleCall(
   switch (toolName) {
     case "ninjaone_alerts_list": {
       const limit = (args.limit as number) || 50;
+      const cursor = args.cursor as string | undefined;
+      logger.info("API call: alerts.list", {
+        severity: args.severity,
+        organizationId: args.organization_id,
+        deviceId: args.device_id,
+        sourceType: args.source_type,
+        limit,
+        cursor,
+      });
+
       const response = await client.alerts.list({
         severity: args.severity as string | undefined,
         organizationId: args.organization_id as number | undefined,
         deviceId: args.device_id as number | undefined,
         sourceType: args.source_type as string | undefined,
         pageSize: limit,
-        cursor: args.cursor as string | undefined,
+        cursor,
       });
+      logger.debug("API response: alerts.list", { response });
+
+      if (!response || typeof response !== "object" || !("alerts" in response)) {
+        logger.warn("Unexpected response shape from alerts.list", {
+          responseType: typeof response,
+          keys: response ? Object.keys(response) : [],
+          raw: JSON.stringify(response)?.substring(0, 500),
+        });
+      }
+
+      const alerts = response?.alerts ?? [];
+      const nextCursor = response?.cursor;
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(
-              {
-                alerts: response.alerts,
-                cursor: response.cursor,
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify({ alerts, cursor: nextCursor }, null, 2),
           },
         ],
       };
@@ -144,7 +160,9 @@ async function handleCall(
 
     case "ninjaone_alerts_reset": {
       const alertUid = args.alert_uid as string;
+      logger.info("API call: alerts.reset", { alertUid });
       const result = await client.alerts.reset(alertUid);
+      logger.debug("API response: alerts.reset", { result });
 
       return {
         content: [
@@ -177,11 +195,13 @@ async function handleCall(
         };
       }
 
+      logger.info("API call: alerts.resetAll", { deviceId, organizationId, severity });
       const result = await client.alerts.resetAll({
         deviceId,
         organizationId,
         severity,
       });
+      logger.debug("API response: alerts.resetAll", { result });
 
       return {
         content: [
@@ -199,7 +219,9 @@ async function handleCall(
 
     case "ninjaone_alerts_summary": {
       const groupBy = (args.group_by as string) || "severity";
+      logger.info("API call: alerts.getSummary", { groupBy });
       const summary = await client.alerts.getSummary({ groupBy });
+      logger.debug("API response: alerts.getSummary", { summary });
 
       return {
         content: [{ type: "text", text: JSON.stringify(summary, null, 2) }],

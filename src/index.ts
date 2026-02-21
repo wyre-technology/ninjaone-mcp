@@ -35,6 +35,7 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { getDomainHandler, getAvailableDomains } from "./domains/index.js";
 import { isDomainName, type DomainName } from "./utils/types.js";
 import { getCredentials } from "./utils/client.js";
+import { logger } from "./utils/logger.js";
 
 // Server state
 let currentDomain: DomainName | null = null;
@@ -129,6 +130,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 // Handle CallTool requests
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+  logger.info("Tool call received", { tool: name, arguments: args });
 
   try {
     // Handle navigation
@@ -166,6 +168,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // Get tools for the new domain
       const handler = await getDomainHandler(domain);
       const domainTools = handler.getTools();
+
+      logger.info("Navigated to domain", { domain, toolCount: domainTools.length });
 
       return {
         content: [
@@ -220,7 +224,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const toolExists = domainTools.some((t) => t.name === name);
 
       if (toolExists) {
-        return await handler.handleCall(name, args as Record<string, unknown>);
+        const result = await handler.handleCall(name, args as Record<string, unknown>);
+        logger.debug("Tool call completed", {
+          tool: name,
+          responseSize: JSON.stringify(result).length,
+        });
+        return result;
       }
     }
 
@@ -238,6 +247,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    logger.error("Tool call failed", { tool: name, error: message, stack });
     return {
       content: [{ type: "text", text: `Error: ${message}` }],
       isError: true,
@@ -251,7 +262,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function startStdioTransport(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("NinjaOne MCP server running on stdio (decision tree mode)");
+  logger.info("NinjaOne MCP server running on stdio (decision tree mode)");
 }
 
 /**
@@ -273,13 +284,25 @@ async function startHttpTransport(): Promise<void> {
 
     // Health endpoint - no auth required
     if (url.pathname === "/health") {
-      res.writeHead(200, { "Content-Type": "application/json" });
+      const creds = getCredentials();
+      const status = creds ? "ok" : "degraded";
+      const statusCode = creds ? 200 : 503;
+
+      res.writeHead(statusCode, { "Content-Type": "application/json" });
       res.end(
         JSON.stringify({
-          status: "ok",
+          status,
           transport: "http",
           authMode: isGatewayMode ? "gateway" : "env",
           timestamp: new Date().toISOString(),
+          credentials: {
+            configured: !!creds,
+            region: creds?.region ?? null,
+            hasClientId: !!process.env.NINJAONE_CLIENT_ID,
+            hasClientSecret: !!process.env.NINJAONE_CLIENT_SECRET,
+          },
+          logLevel: process.env.LOG_LEVEL || "info",
+          version: "1.0.0",
         })
       );
       return;
@@ -328,18 +351,16 @@ async function startHttpTransport(): Promise<void> {
 
   await new Promise<void>((resolve) => {
     httpServer.listen(port, host, () => {
-      console.error(`NinjaOne MCP server listening on http://${host}:${port}/mcp`);
-      console.error(`Health check available at http://${host}:${port}/health`);
-      console.error(
-        `Authentication mode: ${isGatewayMode ? "gateway (header-based)" : "env (environment variables)"}`
-      );
+      logger.info(`NinjaOne MCP server listening on http://${host}:${port}/mcp`);
+      logger.info(`Health check available at http://${host}:${port}/health`);
+      logger.info(`Authentication mode: ${isGatewayMode ? "gateway (header-based)" : "env (environment variables)"}`);
       resolve();
     });
   });
 
   // Graceful shutdown
   const shutdown = async () => {
-    console.error("Shutting down NinjaOne MCP server...");
+    logger.info("Shutting down NinjaOne MCP server...");
     await new Promise<void>((resolve, reject) => {
       httpServer.close((err) => (err ? reject(err) : resolve()));
     });
@@ -356,6 +377,11 @@ async function startHttpTransport(): Promise<void> {
  */
 async function main() {
   const transportType = process.env.MCP_TRANSPORT || "stdio";
+  logger.info("Starting NinjaOne MCP server", {
+    transport: transportType,
+    logLevel: process.env.LOG_LEVEL || "info",
+    nodeVersion: process.version,
+  });
 
   if (transportType === "http") {
     await startHttpTransport();
@@ -364,4 +390,10 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  logger.error("Fatal startup error", {
+    error: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+  });
+  process.exit(1);
+});
