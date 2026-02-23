@@ -1,0 +1,54 @@
+name: Bug Report
+description: Report a bug in this MCP server
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: What type of component is affected?
+      options:
+        - MCP Tool
+        - API Integration
+        - Authentication
+        - Configuration
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug clearly. What did you expect vs what actually happened?
+      placeholder: |
+        Expected: The tool should return ticket details with priority field.
+        Actual: Priority field is missing from the response.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Call the get_ticket tool with ID 12345
+        2. Check the returned fields
+        3. Priority field is missing
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Any relevant environment details.
+      placeholder: |
+        - Claude Code version: X.X.X
+        - OS: macOS / Windows / Linux
+        - MCP server version: latest from main
+    validations:
+      required: false
