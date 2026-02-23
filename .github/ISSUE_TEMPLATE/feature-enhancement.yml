@@ -1,0 +1,44 @@
+name: Feature Enhancement
+description: Propose a new tool or enhancement for this MCP server
+title: "[Enhancement] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: tool-type
+    attributes:
+      label: Tool type
+      description: What kind of enhancement is this?
+      options:
+        - New Tool
+        - Existing Tool Enhancement
+        - API Coverage Expansion
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What are you adding or changing?
+      description: Describe the new tool or enhancement you want to add.
+      placeholder: "e.g., Add a bulk_update_tickets tool that updates status and priority for multiple tickets at once."
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-endpoints
+    attributes:
+      label: API endpoints involved
+      description: List any vendor API endpoints this will use (if known).
+      placeholder: "e.g., PATCH /v1.0/Tickets/entityInformation"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: breaking-changes
+    attributes:
+      label: Breaking changes
+      options:
+        - label: This change modifies existing tool behavior
+          required: false
