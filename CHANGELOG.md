@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.2.2...v1.2.3) (2026-02-23)
+
+
+### Bug Fixes
+
+* quote MCPB bundle filename to prevent shell glob expansion failure ([7b4e291](https://github.com/wyre-technology/ninjaone-mcp/commit/7b4e2910caf652f58b8e02792f4e6f8a77e8ec22))
+
 ## [1.2.2](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.2.1...v1.2.2) (2026-02-21)
 
 
