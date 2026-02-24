@@ -1,3 +1,11 @@
+## [1.2.4](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.2.3...v1.2.4) (2026-02-24)
+
+
+### Bug Fixes
+
+* align MCP handlers with actual node-ninjaone library API ([2cd8b36](https://github.com/wyre-technology/ninjaone-mcp/commit/2cd8b367084d922617723ca118bff6b8610f864f))
+* update tests to match corrected library API calls ([ad3f3e2](https://github.com/wyre-technology/ninjaone-mcp/commit/ad3f3e284f61fb5c97b04ee61b66fde047f27603))
+
 ## [1.2.3](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.2.2...v1.2.3) (2026-02-23)
 
 
