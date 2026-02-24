@@ -10,7 +10,7 @@ const {
   mockDevicesGet,
   mockDevicesReboot,
   mockDevicesGetServices,
-  mockDevicesGetAlerts,
+  mockAlertsListByDevice,
   mockDevicesGetActivities,
   mockClient,
 } = vi.hoisted(() => {
@@ -18,7 +18,7 @@ const {
   const mockDevicesGet = vi.fn();
   const mockDevicesReboot = vi.fn();
   const mockDevicesGetServices = vi.fn();
-  const mockDevicesGetAlerts = vi.fn();
+  const mockAlertsListByDevice = vi.fn();
   const mockDevicesGetActivities = vi.fn();
 
   const mockClient = {
@@ -27,8 +27,10 @@ const {
       get: mockDevicesGet,
       reboot: mockDevicesReboot,
       getServices: mockDevicesGetServices,
-      getAlerts: mockDevicesGetAlerts,
       getActivities: mockDevicesGetActivities,
+    },
+    alerts: {
+      listByDevice: mockAlertsListByDevice,
     },
   };
 
@@ -37,7 +39,7 @@ const {
     mockDevicesGet,
     mockDevicesReboot,
     mockDevicesGetServices,
-    mockDevicesGetAlerts,
+    mockAlertsListByDevice,
     mockDevicesGetActivities,
     mockClient,
   };
@@ -65,35 +67,30 @@ describe("Devices Domain Handler", () => {
     mockDevicesGet.mockClear();
     mockDevicesReboot.mockClear();
     mockDevicesGetServices.mockClear();
-    mockDevicesGetAlerts.mockClear();
+    mockAlertsListByDevice.mockClear();
     mockDevicesGetActivities.mockClear();
 
-    // Reset mock implementations
-    mockDevicesList.mockResolvedValue({
-      devices: [
-        { id: 1, systemName: "Device 1", organizationId: 1 },
-        { id: 2, systemName: "Device 2", organizationId: 1 },
-      ],
-      cursor: "next-page",
-    });
+    // Reset mock implementations - list returns Device[] directly
+    mockDevicesList.mockResolvedValue([
+      { id: 1, systemName: "Device 1", organizationId: 1 },
+      { id: 2, systemName: "Device 2", organizationId: 1 },
+    ]);
     mockDevicesGet.mockResolvedValue({
       id: 1,
       systemName: "Device 1",
       organizationId: 1,
       online: true,
     });
-    mockDevicesReboot.mockResolvedValue({ success: true });
-    mockDevicesGetServices.mockResolvedValue({
-      services: [
-        { name: "Service 1", state: "RUNNING" },
-        { name: "Service 2", state: "STOPPED" },
-      ],
-    });
-    mockDevicesGetAlerts.mockResolvedValue({
-      alerts: [
-        { id: 1, message: "Alert 1", severity: "CRITICAL" },
-      ],
-    });
+    mockDevicesReboot.mockResolvedValue(undefined);
+    // getServices returns DeviceService[] directly
+    mockDevicesGetServices.mockResolvedValue([
+      { name: "Service 1", state: "RUNNING" },
+      { name: "Service 2", state: "STOPPED" },
+    ]);
+    // alerts.listByDevice returns Alert[] directly
+    mockAlertsListByDevice.mockResolvedValue([
+      { uid: "alert-1", message: "Alert 1", severity: "CRITICAL", deviceId: 1, organizationId: 1 },
+    ]);
     mockDevicesGetActivities.mockResolvedValue({
       activities: [
         { id: 1, type: "LOGIN", timestamp: "2024-01-01T00:00:00Z" },
@@ -143,7 +140,6 @@ describe("Devices Domain Handler", () => {
 
         const data = JSON.parse(result.content[0].text);
         expect(data.devices).toHaveLength(2);
-        expect(data.cursor).toBe("next-page");
       });
 
       it("should pass filters to API", async () => {
@@ -156,8 +152,6 @@ describe("Devices Domain Handler", () => {
 
         expect(mockDevicesList).toHaveBeenCalledWith({
           organizationId: 5,
-          deviceClass: "WINDOWS_SERVER",
-          online: true,
           pageSize: 10,
           cursor: undefined,
         });
@@ -176,6 +170,22 @@ describe("Devices Domain Handler", () => {
         expect(data.id).toBe(1);
         expect(data.systemName).toBe("Device 1");
       });
+
+      it("should accept camelCase deviceId param", async () => {
+        const result = await devicesHandler.handleCall("ninjaone_devices_get", {
+          deviceId: 1,
+        });
+
+        expect(result.isError).toBeUndefined();
+        expect(mockDevicesGet).toHaveBeenCalledWith(1);
+      });
+
+      it("should return error when no device_id provided", async () => {
+        const result = await devicesHandler.handleCall("ninjaone_devices_get", {});
+
+        expect(result.isError).toBe(true);
+        expect(result.content[0].text).toContain("device_id is required");
+      });
     });
 
     describe("ninjaone_devices_reboot", () => {
@@ -190,6 +200,7 @@ describe("Devices Domain Handler", () => {
         const data = JSON.parse(result.content[0].text);
         expect(data.success).toBe(true);
         expect(data.message).toBe("Reboot scheduled");
+        expect(mockDevicesReboot).toHaveBeenCalledWith(1, "Scheduled maintenance");
       });
     });
 
@@ -202,20 +213,34 @@ describe("Devices Domain Handler", () => {
         expect(result.isError).toBeUndefined();
 
         const data = JSON.parse(result.content[0].text);
-        expect(data.services).toHaveLength(2);
+        expect(data).toHaveLength(2);
       });
-    });
 
-    describe("ninjaone_devices_alerts", () => {
-      it("should list device alerts", async () => {
-        const result = await devicesHandler.handleCall("ninjaone_devices_alerts", {
+      it("should filter services by state client-side", async () => {
+        const result = await devicesHandler.handleCall("ninjaone_devices_services", {
           device_id: 1,
+          state: "RUNNING",
         });
 
         expect(result.isError).toBeUndefined();
 
         const data = JSON.parse(result.content[0].text);
-        expect(data.alerts).toHaveLength(1);
+        expect(data).toHaveLength(1);
+        expect(data[0].state).toBe("RUNNING");
+      });
+    });
+
+    describe("ninjaone_devices_alerts", () => {
+      it("should list device alerts via alerts.listByDevice", async () => {
+        const result = await devicesHandler.handleCall("ninjaone_devices_alerts", {
+          device_id: 1,
+        });
+
+        expect(result.isError).toBeUndefined();
+        expect(mockAlertsListByDevice).toHaveBeenCalledWith(1);
+
+        const data = JSON.parse(result.content[0].text);
+        expect(data).toHaveLength(1);
       });
     });
 

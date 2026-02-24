@@ -8,29 +8,29 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const {
   mockAlertsList,
   mockAlertsReset,
-  mockAlertsResetAll,
-  mockAlertsGetSummary,
+  mockAlertsResetByDevice,
+  mockAlertsResetByOrganization,
   mockClient,
 } = vi.hoisted(() => {
   const mockAlertsList = vi.fn();
   const mockAlertsReset = vi.fn();
-  const mockAlertsResetAll = vi.fn();
-  const mockAlertsGetSummary = vi.fn();
+  const mockAlertsResetByDevice = vi.fn();
+  const mockAlertsResetByOrganization = vi.fn();
 
   const mockClient = {
     alerts: {
       list: mockAlertsList,
       reset: mockAlertsReset,
-      resetAll: mockAlertsResetAll,
-      getSummary: mockAlertsGetSummary,
+      resetByDevice: mockAlertsResetByDevice,
+      resetByOrganization: mockAlertsResetByOrganization,
     },
   };
 
   return {
     mockAlertsList,
     mockAlertsReset,
-    mockAlertsResetAll,
-    mockAlertsGetSummary,
+    mockAlertsResetByDevice,
+    mockAlertsResetByOrganization,
     mockClient,
   };
 });
@@ -55,26 +55,17 @@ describe("Alerts Domain Handler", () => {
     // Clear call history
     mockAlertsList.mockClear();
     mockAlertsReset.mockClear();
-    mockAlertsResetAll.mockClear();
-    mockAlertsGetSummary.mockClear();
+    mockAlertsResetByDevice.mockClear();
+    mockAlertsResetByOrganization.mockClear();
 
-    // Reset mock implementations
-    mockAlertsList.mockResolvedValue({
-      alerts: [
-        { uid: "alert-1", message: "Alert 1", severity: "CRITICAL" },
-        { uid: "alert-2", message: "Alert 2", severity: "MAJOR" },
-      ],
-      cursor: "next-page",
-    });
-    mockAlertsReset.mockResolvedValue({ success: true });
-    mockAlertsResetAll.mockResolvedValue({ count: 5 });
-    mockAlertsGetSummary.mockResolvedValue({
-      bySeverity: {
-        CRITICAL: 2,
-        MAJOR: 5,
-        MINOR: 10,
-      },
-    });
+    // Reset mock implementations - list returns Alert[] directly
+    mockAlertsList.mockResolvedValue([
+      { uid: "alert-1", message: "Alert 1", severity: "CRITICAL", deviceId: 1, organizationId: 1 },
+      { uid: "alert-2", message: "Alert 2", severity: "MAJOR", deviceId: 2, organizationId: 1 },
+    ]);
+    mockAlertsReset.mockResolvedValue(undefined);
+    mockAlertsResetByDevice.mockResolvedValue({ count: 5, success: true });
+    mockAlertsResetByOrganization.mockResolvedValue({ count: 10, success: true });
   });
 
   describe("getTools", () => {
@@ -109,7 +100,6 @@ describe("Alerts Domain Handler", () => {
 
         const data = JSON.parse(result.content[0].text);
         expect(data.alerts).toHaveLength(2);
-        expect(data.cursor).toBe("next-page");
       });
 
       it("should pass filters to API", async () => {
@@ -152,6 +142,7 @@ describe("Alerts Domain Handler", () => {
         });
 
         expect(result.isError).toBeUndefined();
+        expect(mockAlertsResetByDevice).toHaveBeenCalledWith(1);
 
         const data = JSON.parse(result.content[0].text);
         expect(data.success).toBe(true);
@@ -163,6 +154,7 @@ describe("Alerts Domain Handler", () => {
         });
 
         expect(result.isError).toBeUndefined();
+        expect(mockAlertsResetByOrganization).toHaveBeenCalledWith(1);
 
         const data = JSON.parse(result.content[0].text);
         expect(data.success).toBe(true);
@@ -177,13 +169,30 @@ describe("Alerts Domain Handler", () => {
     });
 
     describe("ninjaone_alerts_summary", () => {
-      it("should get alert summary", async () => {
+      it("should compute alert summary client-side", async () => {
         const result = await alertsHandler.handleCall("ninjaone_alerts_summary", {});
+
+        expect(result.isError).toBeUndefined();
+        expect(mockAlertsList).toHaveBeenCalledWith();
+
+        const data = JSON.parse(result.content[0].text);
+        expect(data.total).toBe(2);
+        expect(data.bySeverity).toBeDefined();
+        expect(data.bySeverity.CRITICAL).toBe(1);
+        expect(data.bySeverity.MAJOR).toBe(1);
+      });
+
+      it("should group by organization when requested", async () => {
+        const result = await alertsHandler.handleCall("ninjaone_alerts_summary", {
+          group_by: "organization",
+        });
 
         expect(result.isError).toBeUndefined();
 
         const data = JSON.parse(result.content[0].text);
-        expect(data.bySeverity).toBeDefined();
+        expect(data.total).toBe(2);
+        expect(data.byOrganization).toBeDefined();
+        expect(data.byOrganization["1"]).toBe(2);
       });
     });
 

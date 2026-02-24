@@ -10,14 +10,14 @@ const {
   mockOrganizationsGet,
   mockOrganizationsCreate,
   mockOrganizationsGetLocations,
-  mockOrganizationsGetDevices,
+  mockDevicesListByOrganization,
   mockClient,
 } = vi.hoisted(() => {
   const mockOrganizationsList = vi.fn();
   const mockOrganizationsGet = vi.fn();
   const mockOrganizationsCreate = vi.fn();
   const mockOrganizationsGetLocations = vi.fn();
-  const mockOrganizationsGetDevices = vi.fn();
+  const mockDevicesListByOrganization = vi.fn();
 
   const mockClient = {
     organizations: {
@@ -25,7 +25,9 @@ const {
       get: mockOrganizationsGet,
       create: mockOrganizationsCreate,
       getLocations: mockOrganizationsGetLocations,
-      getDevices: mockOrganizationsGetDevices,
+    },
+    devices: {
+      listByOrganization: mockDevicesListByOrganization,
     },
   };
 
@@ -34,7 +36,7 @@ const {
     mockOrganizationsGet,
     mockOrganizationsCreate,
     mockOrganizationsGetLocations,
-    mockOrganizationsGetDevices,
+    mockDevicesListByOrganization,
     mockClient,
   };
 });
@@ -61,16 +63,13 @@ describe("Organizations Domain Handler", () => {
     mockOrganizationsGet.mockClear();
     mockOrganizationsCreate.mockClear();
     mockOrganizationsGetLocations.mockClear();
-    mockOrganizationsGetDevices.mockClear();
+    mockDevicesListByOrganization.mockClear();
 
-    // Reset mock implementations
-    mockOrganizationsList.mockResolvedValue({
-      organizations: [
-        { id: 1, name: "Org 1" },
-        { id: 2, name: "Org 2" },
-      ],
-      cursor: "next-page",
-    });
+    // Reset mock implementations - list returns Organization[] directly
+    mockOrganizationsList.mockResolvedValue([
+      { id: 1, name: "Org 1" },
+      { id: 2, name: "Org 2" },
+    ]);
     mockOrganizationsGet.mockResolvedValue({
       id: 1,
       name: "Org 1",
@@ -86,12 +85,11 @@ describe("Organizations Domain Handler", () => {
         { id: 2, name: "Branch Office" },
       ],
     });
-    mockOrganizationsGetDevices.mockResolvedValue({
-      devices: [
-        { id: 1, systemName: "Device 1" },
-        { id: 2, systemName: "Device 2" },
-      ],
-    });
+    // devices.listByOrganization returns Device[] directly
+    mockDevicesListByOrganization.mockResolvedValue([
+      { id: 1, systemName: "Device 1" },
+      { id: 2, systemName: "Device 2" },
+    ]);
   });
 
   describe("getTools", () => {
@@ -135,7 +133,6 @@ describe("Organizations Domain Handler", () => {
 
         const data = JSON.parse(result.content[0].text);
         expect(data.organizations).toHaveLength(2);
-        expect(data.cursor).toBe("next-page");
       });
     });
 
@@ -182,15 +179,18 @@ describe("Organizations Domain Handler", () => {
     });
 
     describe("ninjaone_organizations_devices", () => {
-      it("should list organization devices", async () => {
+      it("should list organization devices via devices.listByOrganization", async () => {
         const result = await organizationsHandler.handleCall("ninjaone_organizations_devices", {
           organization_id: 1,
         });
 
         expect(result.isError).toBeUndefined();
+        expect(mockDevicesListByOrganization).toHaveBeenCalledWith(1, {
+          pageSize: 50,
+        });
 
         const data = JSON.parse(result.content[0].text);
-        expect(data.devices).toHaveLength(2);
+        expect(data).toHaveLength(2);
       });
     });
 

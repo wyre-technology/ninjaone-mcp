@@ -68,7 +68,7 @@ describe("Tickets Domain Handler", () => {
     mockTicketsAddComment.mockClear();
     mockTicketsGetComments.mockClear();
 
-    // Reset mock implementations
+    // Reset mock implementations - list returns TicketListResponse
     mockTicketsList.mockResolvedValue({
       tickets: [
         { id: 1, subject: "Ticket 1", status: "OPEN" },
@@ -97,12 +97,10 @@ describe("Tickets Domain Handler", () => {
       ticketId: 1,
       body: "Test comment",
     });
-    mockTicketsGetComments.mockResolvedValue({
-      comments: [
-        { id: 1, body: "Comment 1" },
-        { id: 2, body: "Comment 2" },
-      ],
-    });
+    mockTicketsGetComments.mockResolvedValue([
+      { id: 1, body: "Comment 1" },
+      { id: 2, body: "Comment 2" },
+    ]);
   });
 
   describe("getTools", () => {
@@ -174,7 +172,6 @@ describe("Tickets Domain Handler", () => {
           deviceId: 10,
           boardId: undefined,
           pageSize: 25,
-          cursor: undefined,
         });
       });
     });
@@ -214,7 +211,6 @@ describe("Tickets Domain Handler", () => {
           description: "Test description",
           organization_id: 1,
           device_id: 5,
-          board_id: 2,
           priority: "HIGH",
           type: "INCIDENT",
         });
@@ -224,7 +220,6 @@ describe("Tickets Domain Handler", () => {
           description: "Test description",
           organizationId: 1,
           deviceId: 5,
-          boardId: 2,
           priority: "HIGH",
           type: "INCIDENT",
         });
@@ -261,7 +256,7 @@ describe("Tickets Domain Handler", () => {
         expect(data.body).toBe("Test comment");
       });
 
-      it("should pass public flag to API", async () => {
+      it("should set internal flag when public is false", async () => {
         await ticketsHandler.handleCall("ninjaone_tickets_add_comment", {
           ticket_id: 1,
           body: "Private comment",
@@ -270,7 +265,7 @@ describe("Tickets Domain Handler", () => {
 
         expect(mockTicketsAddComment).toHaveBeenCalledWith(1, {
           body: "Private comment",
-          public: false,
+          internal: true,
         });
       });
     });
@@ -284,7 +279,7 @@ describe("Tickets Domain Handler", () => {
         expect(result.isError).toBeUndefined();
 
         const data = JSON.parse(result.content[0].text);
-        expect(data.comments).toHaveLength(2);
+        expect(data).toHaveLength(2);
       });
     });
 
