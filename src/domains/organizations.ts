@@ -128,23 +128,17 @@ async function handleCall(
       const cursor = args.cursor as string | undefined;
       logger.info("API call: organizations.list", { limit, cursor });
 
-      const response = await client.organizations.list({
+      const organizations = await client.organizations.list({
         pageSize: limit,
         cursor,
       });
-      logger.debug("API response: organizations.list", { response });
-
-      // The API may return a raw array or a wrapped {organizations, cursor} object
-      const organizations = Array.isArray(response)
-        ? response
-        : (response?.organizations ?? []);
-      const nextCursor = Array.isArray(response) ? undefined : response?.cursor;
+      logger.debug("API response: organizations.list", { count: organizations.length });
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify({ organizations, cursor: nextCursor }, null, 2),
+            text: JSON.stringify({ organizations }, null, 2),
           },
         ],
       };
@@ -166,7 +160,7 @@ async function handleCall(
       const organization = await client.organizations.create({
         name: args.name as string,
         description: args.description as string | undefined,
-        nodeApprovalMode: args.node_approval_mode as string | undefined,
+        nodeApprovalMode: args.node_approval_mode as 'AUTOMATIC' | 'MANUAL' | 'REJECT' | undefined,
         policyId: args.policy_id as number | undefined,
       });
       logger.debug("API response: organizations.create", { organization });
@@ -190,12 +184,11 @@ async function handleCall(
     case "ninjaone_organizations_devices": {
       const orgId = args.organization_id as number;
       const limit = (args.limit as number) || 50;
-      logger.info("API call: organizations.getDevices", { orgId, limit, deviceClass: args.device_class });
-      const devices = await client.organizations.getDevices(orgId, {
-        deviceClass: args.device_class as string | undefined,
+      logger.info("API call: devices.listByOrganization", { orgId, limit, deviceClass: args.device_class });
+      const devices = await client.devices.listByOrganization(orgId, {
         pageSize: limit,
       });
-      logger.debug("API response: organizations.getDevices", { devices });
+      logger.debug("API response: devices.listByOrganization", { devices });
 
       return {
         content: [{ type: "text", text: JSON.stringify(devices, null, 2) }],

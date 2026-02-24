@@ -6,6 +6,7 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { DomainHandler, CallToolResult } from "../utils/types.js";
+import type { AlertSeverity, AlertSourceType } from "@wyre-technology/node-ninjaone";
 import { getClient } from "../utils/client.js";
 import { logger } from "../utils/logger.js";
 
@@ -127,27 +128,21 @@ async function handleCall(
         cursor,
       });
 
-      const response = await client.alerts.list({
-        severity: args.severity as string | undefined,
+      const alerts = await client.alerts.list({
+        severity: args.severity as AlertSeverity | undefined,
         organizationId: args.organization_id as number | undefined,
         deviceId: args.device_id as number | undefined,
-        sourceType: args.source_type as string | undefined,
+        sourceType: args.source_type as AlertSourceType | undefined,
         pageSize: limit,
         cursor,
       });
-      logger.debug("API response: alerts.list", { response });
-
-      // The API may return a raw array or a wrapped {alerts, cursor} object
-      const alerts = Array.isArray(response)
-        ? response
-        : (response?.alerts ?? []);
-      const nextCursor = Array.isArray(response) ? undefined : response?.cursor;
+      logger.debug("API response: alerts.list", { count: alerts.length });
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify({ alerts, cursor: nextCursor }, null, 2),
+            text: JSON.stringify({ alerts }, null, 2),
           },
         ],
       };
@@ -191,11 +186,12 @@ async function handleCall(
       }
 
       logger.info("API call: alerts.resetAll", { deviceId, organizationId, severity });
-      const result = await client.alerts.resetAll({
-        deviceId,
-        organizationId,
-        severity,
-      });
+      let result;
+      if (deviceId) {
+        result = await client.alerts.resetByDevice(deviceId);
+      } else if (organizationId) {
+        result = await client.alerts.resetByOrganization(organizationId);
+      }
       logger.debug("API response: alerts.resetAll", { result });
 
       return {
@@ -214,12 +210,26 @@ async function handleCall(
 
     case "ninjaone_alerts_summary": {
       const groupBy = (args.group_by as string) || "severity";
-      logger.info("API call: alerts.getSummary", { groupBy });
-      const summary = await client.alerts.getSummary({ groupBy });
-      logger.debug("API response: alerts.getSummary", { summary });
+      logger.info("API call: alerts.list (for summary)", { groupBy });
+      const alerts = await client.alerts.list();
+
+      const summary: Record<string, Record<string, number>> = {};
+      for (const alert of alerts) {
+        if (groupBy === "severity" || groupBy === "both") {
+          const sev = alert.severity || "UNKNOWN";
+          summary.bySeverity = summary.bySeverity || {};
+          summary.bySeverity[sev] = (summary.bySeverity[sev] || 0) + 1;
+        }
+        if (groupBy === "organization" || groupBy === "both") {
+          const orgId = String(alert.organizationId || "UNKNOWN");
+          summary.byOrganization = summary.byOrganization || {};
+          summary.byOrganization[orgId] = (summary.byOrganization[orgId] || 0) + 1;
+        }
+      }
+      logger.debug("API response: alerts summary", { summary });
 
       return {
-        content: [{ type: "text", text: JSON.stringify(summary, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify({ total: alerts.length, ...summary }, null, 2) }],
       };
     }
 

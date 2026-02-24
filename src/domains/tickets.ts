@@ -6,6 +6,7 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { DomainHandler, CallToolResult } from "../utils/types.js";
+import type { TicketStatus, TicketPriority, TicketType } from "@wyre-technology/node-ninjaone";
 import { getClient } from "../utils/client.js";
 import { logger } from "../utils/logger.js";
 
@@ -201,26 +202,19 @@ async function handleCall(
       });
 
       const response = await client.tickets.list({
-        status: args.status as string | undefined,
+        status: args.status as TicketStatus | undefined,
         organizationId: args.organization_id as number | undefined,
         deviceId: args.device_id as number | undefined,
         boardId: args.board_id as number | undefined,
         pageSize: limit,
-        cursor,
       });
-      logger.debug("API response: tickets.list", { response });
-
-      // The API may return a raw array or a wrapped {tickets, cursor} object
-      const tickets = Array.isArray(response)
-        ? response
-        : (response?.tickets ?? []);
-      const nextCursor = Array.isArray(response) ? undefined : response?.cursor;
+      logger.debug("API response: tickets.list", { count: response.tickets?.length });
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify({ tickets, cursor: nextCursor }, null, 2),
+            text: JSON.stringify(response, null, 2),
           },
         ],
       };
@@ -244,9 +238,8 @@ async function handleCall(
         description: args.description as string | undefined,
         organizationId: args.organization_id as number,
         deviceId: args.device_id as number | undefined,
-        boardId: args.board_id as number | undefined,
-        priority: args.priority as string | undefined,
-        type: args.type as string | undefined,
+        priority: args.priority as TicketPriority | undefined,
+        type: args.type as TicketType | undefined,
       });
       logger.debug("API response: tickets.create", { ticket });
 
@@ -261,9 +254,9 @@ async function handleCall(
       const ticket = await client.tickets.update(ticketId, {
         subject: args.subject as string | undefined,
         description: args.description as string | undefined,
-        status: args.status as string | undefined,
-        priority: args.priority as string | undefined,
-        assigneeId: args.assignee_id as number | undefined,
+        status: args.status as TicketStatus | undefined,
+        priority: args.priority as TicketPriority | undefined,
+        assigneeUid: args.assignee_id ? String(args.assignee_id) : undefined,
       });
       logger.debug("API response: tickets.update", { ticket });
 
@@ -277,7 +270,7 @@ async function handleCall(
       logger.info("API call: tickets.addComment", { ticketId });
       const comment = await client.tickets.addComment(ticketId, {
         body: args.body as string,
-        public: (args.public as boolean) ?? true,
+        internal: args.public === false,
       });
       logger.debug("API response: tickets.addComment", { comment });
 

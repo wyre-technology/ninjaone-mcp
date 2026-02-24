@@ -161,33 +161,31 @@ async function handleCall(
         cursor,
       });
 
-      const response = await client.devices.list({
+      const devices = await client.devices.list({
         organizationId: args.organization_id as number | undefined,
-        deviceClass: args.device_class as string | undefined,
-        online: args.online as boolean | undefined,
         pageSize: limit,
         cursor,
       });
-      logger.debug("API response: devices.list", { response });
-
-      // The API may return a raw array or a wrapped {devices, cursor} object
-      const devices = Array.isArray(response)
-        ? response
-        : (response?.devices ?? []);
-      const nextCursor = Array.isArray(response) ? undefined : response?.cursor;
+      logger.debug("API response: devices.list", { deviceCount: devices.length });
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify({ devices, cursor: nextCursor }, null, 2),
+            text: JSON.stringify({ devices }, null, 2),
           },
         ],
       };
     }
 
     case "ninjaone_devices_get": {
-      const deviceId = args.device_id as number;
+      const deviceId = (args.device_id ?? args.deviceId ?? args.id) as number;
+      if (!deviceId) {
+        return {
+          content: [{ type: "text", text: "Error: device_id is required" }],
+          isError: true,
+        };
+      }
       logger.info("API call: devices.get", { deviceId });
       const device = await client.devices.get(deviceId);
       logger.debug("API response: devices.get", { device });
@@ -201,7 +199,7 @@ async function handleCall(
       const deviceId = args.device_id as number;
       const reason = args.reason as string | undefined;
       logger.info("API call: devices.reboot", { deviceId, reason });
-      const result = await client.devices.reboot(deviceId, { reason });
+      const result = await client.devices.reboot(deviceId, reason);
       logger.debug("API response: devices.reboot", { result });
 
       return {
@@ -220,10 +218,12 @@ async function handleCall(
 
     case "ninjaone_devices_services": {
       const deviceId = args.device_id as number;
-      logger.info("API call: devices.getServices", { deviceId, state: args.state });
-      const services = await client.devices.getServices(deviceId, {
-        state: args.state as string | undefined,
-      });
+      const stateFilter = args.state as string | undefined;
+      logger.info("API call: devices.getServices", { deviceId, state: stateFilter });
+      let services = await client.devices.getServices(deviceId);
+      if (stateFilter) {
+        services = services.filter((s) => s.state === stateFilter);
+      }
       logger.debug("API response: devices.getServices", { services });
 
       return {
@@ -233,11 +233,13 @@ async function handleCall(
 
     case "ninjaone_devices_alerts": {
       const deviceId = args.device_id as number;
-      logger.info("API call: devices.getAlerts", { deviceId, severity: args.severity });
-      const alerts = await client.devices.getAlerts(deviceId, {
-        severity: args.severity as string | undefined,
-      });
-      logger.debug("API response: devices.getAlerts", { alerts });
+      const severityFilter = args.severity as string | undefined;
+      logger.info("API call: alerts.listByDevice", { deviceId, severity: severityFilter });
+      let alerts = await client.alerts.listByDevice(deviceId);
+      if (severityFilter) {
+        alerts = alerts.filter((a) => a.severity === severityFilter);
+      }
+      logger.debug("API response: alerts.listByDevice", { alerts });
 
       return {
         content: [{ type: "text", text: JSON.stringify(alerts, null, 2) }],
@@ -247,9 +249,8 @@ async function handleCall(
     case "ninjaone_devices_activities": {
       const deviceId = args.device_id as number;
       const limit = (args.limit as number) || 50;
-      logger.info("API call: devices.getActivities", { deviceId, activityType: args.activity_type, limit });
+      logger.info("API call: devices.getActivities", { deviceId, limit });
       const activities = await client.devices.getActivities(deviceId, {
-        activityType: args.activity_type as string | undefined,
         pageSize: limit,
       });
       logger.debug("API response: devices.getActivities", { activities });
