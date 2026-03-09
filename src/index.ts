@@ -36,6 +36,7 @@ import { getDomainHandler, getAvailableDomains } from "./domains/index.js";
 import { isDomainName, type DomainName } from "./utils/types.js";
 import { getCredentials } from "./utils/client.js";
 import { logger } from "./utils/logger.js";
+import { setServerRef } from "./utils/server-ref.js";
 
 // Server state
 let currentDomain: DomainName | null = null;
@@ -52,6 +53,7 @@ const server = new Server(
     },
   }
 );
+setServerRef(server);
 
 /**
  * Navigation tool - always available

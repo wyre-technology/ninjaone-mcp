@@ -8,6 +8,7 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { DomainHandler, CallToolResult } from "../utils/types.js";
 import { getClient } from "../utils/client.js";
 import { logger } from "../utils/logger.js";
+import { elicitSelection } from "../utils/elicitation.js";
 
 /**
  * Get device domain tools
@@ -153,8 +154,39 @@ async function handleCall(
     case "ninjaone_devices_list": {
       const limit = (args.limit as number) || 50;
       const cursor = args.cursor as string | undefined;
+      let organizationId = args.organization_id as number | undefined;
+
+      // If no organization filter provided, elicit organization selection
+      const hasOrgFilter = args.organization_id !== undefined;
+
+      if (!hasOrgFilter) {
+        try {
+          // Fetch organizations to present as options
+          const orgs = await client.organizations.list();
+          if (orgs.length > 0) {
+            const options = orgs.slice(0, 20).map((org) => ({
+              value: String(org.id),
+              label: org.name || `Organization ${org.id}`,
+            }));
+            options.push({ value: "all", label: "All organizations (no filter)" });
+
+            const selection = await elicitSelection(
+              "No organization filter provided. Would you like to filter devices by organization?",
+              "organization",
+              options
+            );
+
+            if (selection && selection !== "all") {
+              organizationId = parseInt(selection, 10);
+            }
+          }
+        } catch {
+          // If org fetch fails, proceed without filter
+        }
+      }
+
       logger.info("API call: devices.list", {
-        organizationId: args.organization_id,
+        organizationId,
         deviceClass: args.device_class,
         online: args.online,
         limit,
@@ -162,7 +194,7 @@ async function handleCall(
       });
 
       const devices = await client.devices.list({
-        organizationId: args.organization_id as number | undefined,
+        organizationId,
         pageSize: limit,
         cursor,
       });

@@ -9,6 +9,7 @@ import type { DomainHandler, CallToolResult } from "../utils/types.js";
 import type { AlertSeverity, AlertSourceType } from "@wyre-technology/node-ninjaone";
 import { getClient } from "../utils/client.js";
 import { logger } from "../utils/logger.js";
+import { elicitSelection } from "../utils/elicitation.js";
 
 /**
  * Get alert domain tools
@@ -119,8 +120,31 @@ async function handleCall(
     case "ninjaone_alerts_list": {
       const limit = (args.limit as number) || 50;
       const cursor = args.cursor as string | undefined;
+      let severity = args.severity as AlertSeverity | undefined;
+
+      // If no filters provided, elicit a severity filter
+      const hasFilters =
+        args.severity || args.organization_id || args.device_id || args.source_type;
+
+      if (!hasFilters) {
+        const selection = await elicitSelection(
+          "No filters provided. Would you like to filter alerts by severity?",
+          "severity",
+          [
+            { value: "CRITICAL", label: "Critical" },
+            { value: "MAJOR", label: "Major" },
+            { value: "MINOR", label: "Minor" },
+            { value: "all", label: "All severities (no filter)" },
+          ]
+        );
+
+        if (selection && selection !== "all") {
+          severity = selection as AlertSeverity;
+        }
+      }
+
       logger.info("API call: alerts.list", {
-        severity: args.severity,
+        severity,
         organizationId: args.organization_id,
         deviceId: args.device_id,
         sourceType: args.source_type,
@@ -129,7 +153,7 @@ async function handleCall(
       });
 
       const alerts = await client.alerts.list({
-        severity: args.severity as AlertSeverity | undefined,
+        severity,
         organizationId: args.organization_id as number | undefined,
         deviceId: args.device_id as number | undefined,
         sourceType: args.source_type as AlertSourceType | undefined,
