@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.3.0...v1.3.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* update node-ninjaone to 1.0.2 (content-type response parsing fix) ([6dce81c](https://github.com/wyre-technology/ninjaone-mcp/commit/6dce81ca27344b56e00078bd74acf9fd34d25488))
+
 # [1.3.0](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.2.4...v1.3.0) (2026-03-10)
 
 
