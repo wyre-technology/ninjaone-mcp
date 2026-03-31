@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.3.3...v1.4.0) (2026-03-31)
+
+
+### Features
+
+* add Canada, US2, and Federal region support ([f382a01](https://github.com/wyre-technology/ninjaone-mcp/commit/f382a0113ed61ebe4aeca450d90bffc675d16df6)), closes [#3](https://github.com/wyre-technology/ninjaone-mcp/issues/3)
+
 ## [1.3.3](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.3.2...v1.3.3) (2026-03-31)
 
 
