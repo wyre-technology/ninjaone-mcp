@@ -44,13 +44,13 @@ export function isDomainName(value: string): value is DomainName {
 /**
  * NinjaOne region type
  */
-export type NinjaOneRegion = "us" | "eu" | "oc";
+export type NinjaOneRegion = "us" | "eu" | "oc" | "ca" | "us2" | "fed";
 
 /**
  * Check if a string is a valid NinjaOne region
  */
 export function isValidRegion(value: string): value is NinjaOneRegion {
-  return ["us", "eu", "oc"].includes(value);
+  return ["us", "eu", "oc", "ca", "us2", "fed"].includes(value);
 }
 
 /**
@@ -62,6 +62,12 @@ export function getBaseUrlForRegion(region: NinjaOneRegion): string {
       return "https://eu.ninjarmm.com";
     case "oc":
       return "https://oc.ninjarmm.com";
+    case "ca":
+      return "https://ca.ninjarmm.com";
+    case "us2":
+      return "https://us2.ninjarmm.com";
+    case "fed":
+      return "https://fed.ninjarmm.com";
     case "us":
     default:
       return "https://app.ninjarmm.com";

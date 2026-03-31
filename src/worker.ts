@@ -5,7 +5,7 @@
  * Credentials are expected via gateway headers:
  * - X-Ninja-Client-ID
  * - X-Ninja-Client-Secret
- * - X-Ninja-Region (optional, defaults to "us")
+ * - X-Ninja-Region (optional, defaults to "us"; valid: us, eu, oc, ca, us2, fed)
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";

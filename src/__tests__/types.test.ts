@@ -32,6 +32,9 @@ describe("Type Utilities", () => {
       expect(isValidRegion("us")).toBe(true);
       expect(isValidRegion("eu")).toBe(true);
       expect(isValidRegion("oc")).toBe(true);
+      expect(isValidRegion("ca")).toBe(true);
+      expect(isValidRegion("us2")).toBe(true);
+      expect(isValidRegion("fed")).toBe(true);
     });
 
     it("should return false for invalid regions", () => {
@@ -53,6 +56,18 @@ describe("Type Utilities", () => {
 
     it("should return correct URL for OC region", () => {
       expect(getBaseUrlForRegion("oc")).toBe("https://oc.ninjarmm.com");
+    });
+
+    it("should return correct URL for CA region", () => {
+      expect(getBaseUrlForRegion("ca")).toBe("https://ca.ninjarmm.com");
+    });
+
+    it("should return correct URL for US2 region", () => {
+      expect(getBaseUrlForRegion("us2")).toBe("https://us2.ninjarmm.com");
+    });
+
+    it("should return correct URL for FED region", () => {
+      expect(getBaseUrlForRegion("fed")).toBe("https://fed.ninjarmm.com");
     });
   });
 });

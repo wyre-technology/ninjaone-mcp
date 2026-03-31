@@ -36,7 +36,7 @@ export function getCredentials(): NinjaOneCredentials | null {
   }
 
   if (!isValidRegion(regionEnv)) {
-    logger.warn("Invalid region configured", { region: regionEnv, valid: ["us", "eu", "oc"] });
+    logger.warn("Invalid region configured", { region: regionEnv, valid: ["us", "eu", "oc", "ca", "us2", "fed"] });
     return null;
   }
 
@@ -54,7 +54,7 @@ export async function getClient(): Promise<NinjaOneClient> {
 
   if (!creds) {
     throw new Error(
-      "No API credentials provided. Please configure NINJAONE_CLIENT_ID, NINJAONE_CLIENT_SECRET, and optionally NINJAONE_REGION (us, eu, oc) environment variables."
+      "No API credentials provided. Please configure NINJAONE_CLIENT_ID, NINJAONE_CLIENT_SECRET, and optionally NINJAONE_REGION (us, eu, oc, ca, us2, fed) environment variables."
     );
   }
 
