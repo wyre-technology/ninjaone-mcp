@@ -9,7 +9,7 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { DomainHandler, CallToolResult } from "../utils/types.js";
-import type { TicketStatus, TicketPriority, TicketType } from "@wyre-technology/node-ninjaone";
+import type { TicketStatus, TicketPriority, TicketType } from "../ninjaone/index.js";
 import { getClient } from "../utils/client.js";
 import { logger } from "../utils/logger.js";
 
@@ -766,7 +766,7 @@ async function handleCall(
       if (typeof getByBoard !== "function") {
         return errorResult(
           "The getTicketsByBoard endpoint is not supported by the current NinjaOne client library version. " +
-          "Please upgrade @wyre-technology/node-ninjaone to the latest version."
+          "This method is not available on the NinjaOne client."
         );
       }
       const response = await getByBoard.call(client.tickets, boardId, {
@@ -833,7 +833,7 @@ async function handleCall(
       if (typeof getStatuses !== "function") {
         return errorResult(
           "The getStatuses endpoint is not supported by the current NinjaOne client library version. " +
-          "Please upgrade @wyre-technology/node-ninjaone to the latest version."
+          "This method is not available on the NinjaOne client."
         );
       }
       const statuses = await getStatuses.call(client.tickets);
@@ -863,7 +863,7 @@ async function handleCall(
       if (typeof getAttributes !== "function") {
         return errorResult(
           "The getAttributes endpoint is not supported by the current NinjaOne client library version. " +
-          "Please upgrade @wyre-technology/node-ninjaone to the latest version."
+          "This method is not available on the NinjaOne client."
         );
       }
       const attributes = await getAttributes.call(client.tickets);
@@ -896,7 +896,7 @@ async function handleCall(
       if (typeof getContacts !== "function") {
         return errorResult(
           "The getContacts endpoint is not supported by the current NinjaOne client library version. " +
-          "Please upgrade @wyre-technology/node-ninjaone to the latest version."
+          "This method is not available on the NinjaOne client."
         );
       }
       const contacts = await getContacts.call(client.tickets);
@@ -927,7 +927,7 @@ async function handleCall(
       if (typeof getUsers !== "function") {
         return errorResult(
           "The getUsers endpoint is not supported by the current NinjaOne client library version. " +
-          "Please upgrade @wyre-technology/node-ninjaone to the latest version."
+          "This method is not available on the NinjaOne client."
         );
       }
       const users = await getUsers.call(client.tickets);

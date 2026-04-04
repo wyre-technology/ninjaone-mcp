@@ -5,8 +5,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { getCredentials, getClient, clearClient } from "../utils/client.js";
 
-// Mock the node-ninjaone library
-vi.mock("@wyre-technology/node-ninjaone", () => ({
+// Mock the NinjaOne client library
+vi.mock("../ninjaone/index.js", () => ({
   NinjaOneClient: vi.fn().mockImplementation((config) => ({
     config,
     devices: {
@@ -14,29 +14,39 @@ vi.mock("@wyre-technology/node-ninjaone", () => ({
       get: vi.fn(),
       reboot: vi.fn(),
       getServices: vi.fn(),
-      getAlerts: vi.fn(),
       getActivities: vi.fn(),
+      listByOrganization: vi.fn(),
     },
     organizations: {
       list: vi.fn(),
       get: vi.fn(),
       create: vi.fn(),
       getLocations: vi.fn(),
-      getDevices: vi.fn(),
     },
     alerts: {
       list: vi.fn(),
       reset: vi.fn(),
-      resetAll: vi.fn(),
-      getSummary: vi.fn(),
+      listByDevice: vi.fn(),
+      resetByDevice: vi.fn(),
+      resetByOrganization: vi.fn(),
     },
     tickets: {
       list: vi.fn(),
       get: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
       addComment: vi.fn(),
       getComments: vi.fn(),
+      getAttachments: vi.fn(),
+      listBoards: vi.fn(),
+      getTicketsByBoard: vi.fn(),
+      listForms: vi.fn(),
+      getForm: vi.fn(),
+      getStatuses: vi.fn(),
+      getAttributes: vi.fn(),
+      getContacts: vi.fn(),
+      getUsers: vi.fn(),
     },
   })),
 }));
