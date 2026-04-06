@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.4.0...v1.4.1) (2026-04-06)
+
+
+### Bug Fixes
+
+* per-request MCP Server+Transport for gateway compatibility ([fbe7351](https://github.com/wyre-technology/ninjaone-mcp/commit/fbe73518c5427e27129f1ee415f95cbab860709b))
+
 # [1.4.0](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.3.3...v1.4.0) (2026-03-31)
 
 
