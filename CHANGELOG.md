@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.4.1...v1.4.2) (2026-04-07)
+
+
+### Bug Fixes
+
+* **ci:** deploy :latest tag, force revision via env var bump ([d698f40](https://github.com/wyre-technology/ninjaone-mcp/commit/d698f409cf92f55d28816c5419c0702992726ab6))
+
 ## [1.4.1](https://github.com/wyre-technology/ninjaone-mcp/compare/v1.4.0...v1.4.1) (2026-04-06)
 
 
