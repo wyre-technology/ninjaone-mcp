@@ -32,8 +32,16 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { getDomainHandler, getAvailableDomains } from "./domains/index.js";
-import { isDomainName, type DomainName } from "./utils/types.js";
-import { getCredentials } from "./utils/client.js";
+import { isDomainName, isValidRegion, getBaseUrlForRegion, type DomainName } from "./utils/types.js";
+import {
+  getCredentials,
+  createClientDirect,
+  setClientOverride,
+  clearClientOverride,
+  setCredentialOverrides,
+  clearCredentialOverrides,
+  type NinjaOneCredentials,
+} from "./utils/client.js";
 import { logger } from "./utils/logger.js";
 import { setServerRef } from "./utils/server-ref.js";
 
@@ -86,8 +94,12 @@ const statusTool: Tool = {
 /**
  * Create a fresh MCP server instance with all handlers registered.
  * Called once for stdio, or per-request for HTTP transport.
+ *
+ * @param credentialOverrides - Optional credentials for gateway mode.
+ *   When provided, a per-request client is created from these credentials
+ *   instead of reading from process.env.
  */
-function createMcpServer(): Server {
+function createMcpServer(credentialOverrides?: NinjaOneCredentials): Server {
   let currentDomain: DomainName | null = null;
 
   const server = new Server(
@@ -126,6 +138,14 @@ function createMcpServer(): Server {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
     logger.info("Tool call received", { tool: name, arguments: args });
+
+    // If per-request credentials were provided, create an isolated client
+    // and set it as the override so all domain handlers pick it up via getClient().
+    if (credentialOverrides) {
+      setCredentialOverrides(credentialOverrides);
+      const directClient = await createClientDirect(credentialOverrides);
+      setClientOverride(directClient);
+    }
 
     try {
       if (name === "ninjaone_navigate") {
@@ -239,6 +259,11 @@ function createMcpServer(): Server {
         content: [{ type: "text", text: `Error: ${message}` }],
         isError: true,
       };
+    } finally {
+      if (credentialOverrides) {
+        clearClientOverride();
+        clearCredentialOverrides();
+      }
     }
   });
 
@@ -295,6 +320,10 @@ async function startHttpTransport(): Promise<void> {
 
     // MCP endpoint
     if (url.pathname === "/mcp") {
+      // In gateway mode, extract per-request credentials from headers
+      // and pass them directly to createMcpServer() for isolation.
+      // No process.env mutation — each request gets its own client.
+      let credOverrides: NinjaOneCredentials | undefined;
       if (isGatewayMode) {
         const clientId = req.headers["x-ninja-client-id"] as string | undefined;
         const clientSecret = req.headers["x-ninja-client-secret"] as string | undefined;
@@ -314,15 +343,18 @@ async function startHttpTransport(): Promise<void> {
           return;
         }
 
-        process.env.NINJAONE_CLIENT_ID = clientId;
-        process.env.NINJAONE_CLIENT_SECRET = clientSecret;
-        if (region) {
-          process.env.NINJAONE_REGION = region;
-        }
+        const regionVal = (region?.toLowerCase() || "us") as string;
+        const validRegion = isValidRegion(regionVal) ? regionVal : "us" as const;
+        credOverrides = {
+          clientId,
+          clientSecret,
+          region: validRegion,
+          baseUrl: getBaseUrlForRegion(validRegion),
+        };
       }
 
       // Create fresh server + transport per request (stateless)
-      const server = createMcpServer();
+      const server = createMcpServer(credOverrides);
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,

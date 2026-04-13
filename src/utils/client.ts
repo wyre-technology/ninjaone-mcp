@@ -19,10 +19,65 @@ export interface NinjaOneCredentials {
 let _client: NinjaOneClient | null = null;
 let _credentials: NinjaOneCredentials | null = null;
 
+/** Per-request client override — takes priority over the cached singleton */
+let _clientOverride: NinjaOneClient | null = null;
+
+/** Per-request credential override — takes priority over env vars */
+let _credentialOverrides: NinjaOneCredentials | null = null;
+
 /**
- * Get credentials from environment variables
+ * Create a fresh NinjaOneClient directly from credentials,
+ * bypassing environment variables and the module-level cache.
+ */
+export async function createClientDirect(
+  creds: NinjaOneCredentials
+): Promise<NinjaOneClient> {
+  const { NinjaOneClient } = await import("@wyre-technology/node-ninjaone");
+  return new NinjaOneClient({
+    clientId: creds.clientId,
+    clientSecret: creds.clientSecret,
+    baseUrl: creds.baseUrl,
+  });
+}
+
+/**
+ * Set a request-scoped client override.
+ * While set, getClient() returns this instance instead of the cached one.
+ */
+export function setClientOverride(client: NinjaOneClient): void {
+  _clientOverride = client;
+}
+
+/**
+ * Clear the request-scoped client override.
+ */
+export function clearClientOverride(): void {
+  _clientOverride = null;
+}
+
+/**
+ * Set request-scoped credential overrides.
+ * While set, getCredentials() returns these instead of reading env vars.
+ */
+export function setCredentialOverrides(creds: NinjaOneCredentials): void {
+  _credentialOverrides = creds;
+}
+
+/**
+ * Clear request-scoped credential overrides.
+ */
+export function clearCredentialOverrides(): void {
+  _credentialOverrides = null;
+}
+
+/**
+ * Get credentials from environment variables (or per-request overrides)
  */
 export function getCredentials(): NinjaOneCredentials | null {
+  if (_credentialOverrides) {
+    return _credentialOverrides;
+  }
+
   const clientId = process.env.NINJAONE_CLIENT_ID;
   const clientSecret = process.env.NINJAONE_CLIENT_SECRET;
   const regionEnv = process.env.NINJAONE_REGION?.toLowerCase() || "us";
@@ -50,6 +105,10 @@ export function getCredentials(): NinjaOneCredentials | null {
  * Get or create the NinjaOne client (lazy initialization)
  */
 export async function getClient(): Promise<NinjaOneClient> {
+  if (_clientOverride) {
+    return _clientOverride;
+  }
+
   const creds = getCredentials();
 
   if (!creds) {
