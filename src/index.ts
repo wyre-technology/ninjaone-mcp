@@ -44,6 +44,7 @@ import {
 } from "./utils/client.js";
 import { logger } from "./utils/logger.js";
 import { setServerRef } from "./utils/server-ref.js";
+import { registerPromptHandlers } from "./prompts.js";
 
 /**
  * Navigation tool - always available
@@ -110,10 +111,12 @@ function createMcpServer(credentialOverrides?: NinjaOneCredentials): Server {
     {
       capabilities: {
         tools: {},
+        prompts: {},
       },
     }
   );
   setServerRef(server);
+  registerPromptHandlers(server);
 
   async function getToolsForState(): Promise<Tool[]> {
     const tools: Tool[] = [statusTool];
