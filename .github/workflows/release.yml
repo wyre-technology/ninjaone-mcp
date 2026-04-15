@@ -148,9 +148,9 @@ jobs:
         run: |
           SHORT_SHA="${GITHUB_SHA::7}"
           IMAGE="ghcr.io/${{ github.repository }}:latest"
-          echo "Deploying $IMAGE to gwp-ninjaone (revision tag sha-${SHORT_SHA}-${GITHUB_RUN_ID})"
+          echo "Deploying $IMAGE to mcpgw-prod-ninjaone (revision tag sha-${SHORT_SHA}-${GITHUB_RUN_ID})"
           az containerapp update \
-            --name gwp-ninjaone \
+            --name mcpgw-prod-ninjaone \
             --resource-group mcp-gateway-prod \
             --image "$IMAGE" \
             --set-env-vars "IMAGE_VERSION=sha-${SHORT_SHA}-${GITHUB_RUN_ID}"
